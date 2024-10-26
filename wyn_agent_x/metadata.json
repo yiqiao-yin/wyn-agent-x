@@ -1,0 +1,40 @@
+{
+    "send_sms": {
+        "trigger_word": [
+            "send a message", 
+            "set a demo", 
+            "set up a demo", 
+            "send sms", 
+            "appointment", 
+            "schedule a demo", 
+            "send a text", 
+            "notify via SMS", 
+            "text someone", 
+            "arrange a demo"
+        ],
+        "sample_payload": {
+            "name": "string",
+            "message body": "string"
+        },
+        "prerequisite": null
+    },
+    "google_search": {
+        "trigger_word": [
+            "search on Google", 
+            "google search", 
+            "find information", 
+            "look up", 
+            "search web", 
+            "browse the internet", 
+            "google it", 
+            "find details online", 
+            "search for info", 
+            "do a web search"
+        ],
+        "sample_payload": {
+            "query": "string",
+            "location": "string"
+        },
+        "prerequisite": null
+    }
+}
