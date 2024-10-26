@@ -48,12 +48,18 @@ from google.colab import userdata
 OPENAI_API_KEY = userdata.get('OPENAI_API_KEY')
 TWILIO_ACCOUNT_SID = userdata.get("YOUR_TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = userdata.get("YOUR_TWILIO_AUTH_TOKEN")
+SERPAPI_API_KEY = userdata.get("SERPAPI_API_KEY")
 
 # Import the agent
 from wyn_agent_x.main import AgentX
 
 # Initialize and start the chat!
-agent = AgentX(api_key=OPENAI_API_KEY, account_sid=TWILIO_ACCOUNT_SID, auth_token=TWILIO_AUTH_TOKEN)
+agent = AgentX(
+    api_key=OPENAI_API_KEY,
+    account_sid=TWILIO_ACCOUNT_SID,
+    auth_token=TWILIO_AUTH_TOKEN,
+    serpapi_key=SERPAPI_API_KEY,
+    protocol='You are a helpful assistant.')
 agent.start_chat()
 ```
 
