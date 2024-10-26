@@ -93,8 +93,8 @@ You can easily extend WYN-Agent-X by adding new API calls or intents:
 
 2. **Register your new API** in `list_of_apis.py` with a simple decorator:
    ```python
-   @register_function("send_email")
-   def send_email(payload: Dict[str, str], account_sid: str, auth_token: str, event_stream: list) -> Dict[str, Any]:
+   @register_function("send_sms")
+    def send_sms(payload: Dict[str, str], secrets: Dict[str, str], event_stream: list) -> Dict[str, Any]:
        # Code to send email goes here!
        pass
    ```
