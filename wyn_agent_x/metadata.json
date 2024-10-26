@@ -10,7 +10,17 @@
             "send a text", 
             "notify via SMS", 
             "text someone", 
-            "arrange a demo"
+            "arrange a demo",
+            "send an SMS", 
+            "text a friend", 
+            "initiate a message", 
+            "deliver a text", 
+            "message someone", 
+            "arrange a meeting", 
+            "book an appointment", 
+            "notify someone", 
+            "send a notification", 
+            "remind via text"
         ],
         "sample_payload": {
             "name": "string",
@@ -29,7 +39,17 @@
             "google it", 
             "find details online", 
             "search for info", 
-            "do a web search"
+            "do a web search",
+            "check online", 
+            "find resources", 
+            "get information", 
+            "online search", 
+            "look up information", 
+            "find data", 
+            "internet lookup", 
+            "get search results", 
+            "web query", 
+            "explore online"
         ],
         "sample_payload": {
             "query": "string",
