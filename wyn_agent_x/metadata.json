@@ -52,8 +52,10 @@
             "explore online"
         ],
         "sample_payload": {
+            "engine": "string",
             "query": "string",
-            "location": "string"
+            "location": "string",
+            "num": "string"
         },
         "prerequisite": null
     }

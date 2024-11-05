@@ -102,8 +102,12 @@ def google_search(
     serpapi_key = secrets["serpapi_key"]
 
     # Extract search parameters from the payload
+    engine = payload.get("engine", "google")
     query = payload.get("query", "")
     location = payload.get("location", "")
+    num = payload.get("num", "50")
+    num = int(num)
+    num = num if type(num) == int else 50
 
     # Checkpoint
     print(f"Run google search API using: \nquery={query}, \nlocation={location}")
@@ -111,7 +115,13 @@ def google_search(
     try:
         # Perform the Google Search using SerpAPI
         search = GoogleSearch(
-            {"q": query, "location": location, "api_key": serpapi_key}
+            {
+                "engine": engine,
+                "q": query,
+                "location": location,
+                "api_key": serpapi_key,
+                "num": num,
+            }
         )
         results = search.get_dict()
 
