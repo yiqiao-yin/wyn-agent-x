@@ -142,7 +142,11 @@ def google_search(
 
         # Append the result to the event stream
         event_stream.append(
-            {"event": "api_call", "api_name": "google_search", "response": {"text": response, "status": "200 success"}}
+            {
+                "event": "api_call",
+                "api_name": "google_search",
+                "response": {"text": response, "status": "200 success"},
+            }
         )
 
     except Exception as e:

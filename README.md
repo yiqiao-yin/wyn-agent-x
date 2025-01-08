@@ -35,7 +35,11 @@ wyn-agent-x/
 └── README.md            # You're reading this!
 ```
 
----
+## System Diagram
+
+The system is designed with an *intent processor* interpreting the prompt's purpose from the user. After *intent processor* determines the necessary API required for execution, it attemps to fill up the required input parameters in the input payload. For the unfilled parameters, the *resolver* bounces the questions back to the user to seek more information before execution. This process interates until all required parameters are filled. 
+
+![Graph](https://yourwebsite.com/path/to/image/tests/system_diagram.png)
 
 ## 🎮 Sample Usage
 
