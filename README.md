@@ -76,7 +76,7 @@ Feel free to chat with the bot, ask it to send messages, or perform any task you
 
 For *yfinance* demo, please see [here](https://github.com/yiqiao-yin/wyn-agent-x/blob/main/pics/v2.gif)
 
-You can also access this [notebook]()
+You can also access this [notebook](https://github.com/yiqiao-yin/wyn-agent-x/blob/main/demo/demo%20-%20calling%20yfinance%20api.ipynb).
 
 ---
 
