@@ -39,7 +39,7 @@ wyn-agent-x/
 
 The system is designed with an *intent processor* interpreting the prompt's purpose from the user. After *intent processor* determines the necessary API required for execution, it attemps to fill up the required input parameters in the input payload. For the unfilled parameters, the *resolver* bounces the questions back to the user to seek more information before execution. This process interates until all required parameters are filled. 
 
-![Graph](https://yourwebsite.com/path/to/image/tests/system_diagram.png)
+[![SYSTEM DIAGRAM](https://github.com/yiqiao-yin/wyn-agent-x/blob/main/pics/SYSTEM_DIAGRAM.png)
 
 ## 🎮 Sample Usage
 
@@ -73,6 +73,8 @@ Once started, you'll see this friendly message:
 ```
 
 Feel free to chat with the bot, ask it to send messages, or perform any task you've configured in the metadata. When you're done, simply type `EXIT` to end the session with a friendly goodbye! 👋
+
+[![SYSTEM DIAGRAM](https://github.com/yiqiao-yin/wyn-agent-x/blob/main/pics/SYSTEM_DIAGRAM.png)
 
 ---
 
