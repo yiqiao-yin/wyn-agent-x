@@ -160,6 +160,9 @@ def google_search(
 
 
 import json  # To format dictionary as text
+import os
+import smtplib
+from email.message import EmailMessage
 
 import pandas as pd  # To handle DataFrame type
 import yfinance as yf
@@ -186,6 +189,11 @@ def generate_financial_report(
     # Extract payload values
     ticker = payload.get("ticker", "AAPL")
     save_pdf = payload.get("save_pdf", True)
+    send_email = payload.get("send_email", True)
+    to_email = payload.get("to_email", "eagle0504@gmail.com")
+
+    # Extract secrets
+    email_key = secrets["email_key"]
 
     # Log API call details
     print(f"Generating financial report for ticker: {ticker}, save_pdf: {save_pdf}")
@@ -234,6 +242,55 @@ def generate_financial_report(
             pdf.output(pdf_filename)
             print(f"PDF saved as {pdf_filename}.")
             response = {"status": "success", "file": pdf_filename}
+
+            if send_email:
+                # Param required for sending email
+                file_name = pdf_filename
+                # to_email = to_email
+
+                # Check if the file is a PDF
+                if not file_name.endswith(".pdf"):
+                    raise ValueError("The file must be a .pdf file")
+
+                # Check if the file exists
+                if not os.path.exists(file_name):
+                    raise FileNotFoundError(
+                        f"File '{file_name}' not found in the local directory"
+                    )
+
+                # Email credentials (use environment variables or replace directly)
+                from_email = "eagle0504@gmail.com"  # Your email address
+                password = email_key  # Your email password (use app-specific password for security)
+
+                # Create email message
+                msg = EmailMessage()
+                msg["Subject"] = "Sample PDF Report"
+                msg["From"] = from_email
+                msg["To"] = to_email
+                msg.set_content("Please find the attached PDF file.")
+
+                # Attach the PDF file
+                with open(file_name, "rb") as f:
+                    pdf_data = f.read()
+                    msg.add_attachment(
+                        pdf_data,
+                        maintype="application",
+                        subtype="pdf",
+                        filename=file_name,
+                    )
+
+                # Send the email
+                try:
+                    with smtplib.SMTP_SSL(
+                        "smtp.gmail.com", 465
+                    ) as server:  # SMTP server for Gmail
+                        server.login(from_email, password)
+                        server.send_message(msg)
+                    print(
+                        f"Email sent successfully to {to_email} with the attached PDF: {file_name}"
+                    )
+                except Exception as e:
+                    print(f"Failed to send email: {str(e)}")
         else:
             response = {"status": "skipped", "message": "PDF saving is disabled."}
 

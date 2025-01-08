@@ -21,6 +21,7 @@ class AgentX:
         account_sid: str,
         auth_token: str,
         serpapi_key: str,
+        email_key: str,
         protocol: str = "You are a helpful agent.",
     ):
         self.event_stream = []
@@ -28,6 +29,7 @@ class AgentX:
         self.account_sid = account_sid
         self.auth_token = auth_token
         self.serpapi_key = serpapi_key
+        self.email_key = email_key
 
     def start_chat(self):
         # Friendly welcome message with emoji
@@ -47,6 +49,7 @@ class AgentX:
                 "account_sid": self.account_sid,
                 "auth_token": self.auth_token,
                 "serpapi_key": self.serpapi_key,
+                "email_key": self.email_key,
             }
 
             # Check if we need to resolve and execute any API calls

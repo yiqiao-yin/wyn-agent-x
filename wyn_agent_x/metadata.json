@@ -84,7 +84,9 @@
         ],
         "sample_payload": {
             "ticker": "string",
-            "save_pdf": "bool"
+            "save_pdf": "bool",
+            "send_email": "bool",
+            "to_email": "string"
         },
         "prerequisite": null
     }
