@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wyn-agent-x"
-version = "0.3.7"
+version = "0.4.0"
 description = "This package is an updated WYN-Agent package."
 authors = ["Yiqiao Yin <eagle0504@gmail.com>"]
 readme = "README.md"
