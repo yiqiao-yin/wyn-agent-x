@@ -58,5 +58,34 @@
             "num": "string"
         },
         "prerequisite": null
+    },
+    "generate_financial_report": {
+        "trigger_word": [
+            "generate company report",
+            "summarize stock performance",
+            "compile financial insights",
+            "create market analysis",
+            "get company overview",
+            "review stock trends",
+            "build financial summary",
+            "generate portfolio report",
+            "view financial breakdown",
+            "fetch financial summary",
+            "analyze stock performance",
+            "report on company data",
+            "produce stock summary",
+            "compile stock metrics",
+            "obtain financial overview",
+            "show company performance",
+            "prepare investment summary",
+            "check stock movement report",
+            "generate profit analysis",
+            "overview of financial stats"
+        ],
+        "sample_payload": {
+            "ticker": "string",
+            "save_pdf": "bool"
+        },
+        "prerequisite": null
     }
 }

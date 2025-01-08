@@ -142,7 +142,7 @@ def google_search(
 
         # Append the result to the event stream
         event_stream.append(
-            {"event": "api_call", "api_name": "google_search", "response": response}
+            {"event": "api_call", "api_name": "google_search", "response": {"text": response, "status": "200 success"}}
         )
 
     except Exception as e:
@@ -151,5 +151,102 @@ def google_search(
         event_stream.append(
             {"event": "api_call", "api_name": "google_search", "response": response}
         )
+
+    return response
+
+
+import json  # To format dictionary as text
+
+import pandas as pd  # To handle DataFrame type
+import yfinance as yf
+from fpdf import FPDF
+
+
+@register_function("generate_financial_report")
+def generate_financial_report(
+    payload: Dict[str, str], secrets: Dict[str, str], event_stream: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Generate a financial report for a given ticker and save it as a PDF.
+
+    Args:
+        payload (Dict[str, str]): Contains the ticker symbol and save_pdf flag:
+                                  - ticker: The stock ticker symbol (e.g., "AAPL").
+                                  - save_pdf: Whether to save the report as a PDF (True/False).
+        secrets (Dict[str, str]): Not used but included for consistency.
+        event_stream (list): A list to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the status and the filename if saved.
+    """
+    # Extract payload values
+    ticker = payload.get("ticker", "AAPL")
+    save_pdf = payload.get("save_pdf", True)
+
+    # Log API call details
+    print(f"Generating financial report for ticker: {ticker}, save_pdf: {save_pdf}")
+
+    # Fetching data from Yahoo Finance
+    result = yf.Ticker(ticker)
+    analyst_price_targets = result.analyst_price_targets
+    recommendations_summary = result.recommendations_summary
+
+    # Function to format data as text
+    def format_data(data):
+        if data is None:
+            return "No data available."
+        elif isinstance(data, pd.DataFrame):
+            return data.to_string(index=False)
+        elif isinstance(data, dict):
+            return json.dumps(data, indent=4)
+        else:
+            return str(data)
+
+    response = {}
+
+    try:
+        if save_pdf:
+            # Create PDF
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", "B", 16)
+            pdf.cell(200, 10, f"Financial Summary for {ticker}", ln=True, align="C")
+
+            # Analyst price targets
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, "Analyst Price Targets", ln=True)
+            pdf.set_font("Arial", "", 10)
+            pdf.multi_cell(0, 10, format_data(analyst_price_targets))
+
+            # Recommendations summary
+            pdf.ln(10)
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, "Recommendations Summary", ln=True)
+            pdf.set_font("Arial", "", 10)
+            pdf.multi_cell(0, 10, format_data(recommendations_summary))
+
+            # Save PDF
+            pdf_filename = f"{ticker}_report.pdf"
+            pdf.output(pdf_filename)
+            print(f"PDF saved as {pdf_filename}.")
+            response = {"status": "success", "file": pdf_filename}
+        else:
+            response = {"status": "skipped", "message": "PDF saving is disabled."}
+
+    except Exception as e:
+        response = {
+            "status": f"error: {str(e)}",
+            "message": "Failed to generate financial report.",
+        }
+        print(f"Error: {str(e)}")
+
+    # Append result to event stream
+    event_stream.append(
+        {
+            "event": "api_call",
+            "api_name": "generate_financial_report",
+            "response": response,
+        }
+    )
 
     return response

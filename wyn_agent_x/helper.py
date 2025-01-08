@@ -77,18 +77,29 @@ class ChatBot:
 
 def match_trigger_words(user_message: str, trigger_words: List[str]) -> bool:
     """
-    Check if any of the trigger words are present in the user's message.
+    Check if all words in each trigger phrase are present in the user's message.
 
     Args:
         user_message (str): The message input by the user.
-        trigger_words (List[str]): A list of words to be checked against the user's message.
+        trigger_words (List[str]): A list of phrases to be matched against the user's message.
 
     Returns:
-        bool: True if at least one trigger word is found in the user's message, otherwise False.
+        bool: True if all words in at least one trigger phrase are found in the user's message.
     """
+    # Clean the user message by removing punctuation and converting to lowercase
+    cleaned_message = re.sub(r"[^\w\s]", "", user_message.lower())
+    message_words = cleaned_message.split()  # Split message into individual words
+
     for trigger in trigger_words:
-        if re.search(rf"\b{trigger.lower()}\b", user_message.lower()):
+        cleaned_trigger = re.sub(r"[^\w\s]", "", trigger.lower())
+        trigger_words_list = cleaned_trigger.split()  # Split trigger phrase into words
+
+        # Check if all words in the trigger phrase are present in the user message
+        if all(word in message_words for word in trigger_words_list):
+            print(f"Match found for trigger: '{trigger}'")
             return True
+
+    # print("No match found.")
     return False
 
 
