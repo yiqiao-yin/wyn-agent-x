@@ -202,6 +202,12 @@ def generate_financial_report(
     result = yf.Ticker(ticker)
     analyst_price_targets = result.analyst_price_targets
     recommendations_summary = result.recommendations_summary
+    info = result.info
+
+    # Extract relevant info for the report
+    long_business_summary = info.get("longBusinessSummary", "No summary available.")
+    sector = info.get("sector", "No sector information available.")
+    website = info.get("website", "No website information available.")
 
     # Function to format data as text
     def format_data(data):
@@ -223,6 +229,15 @@ def generate_financial_report(
             pdf.add_page()
             pdf.set_font("Arial", "B", 16)
             pdf.cell(200, 10, f"Financial Summary for {ticker}", ln=True, align="C")
+
+            # Add business overview
+            pdf.ln(10)
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, "Business Overview", ln=True)
+            pdf.set_font("Arial", "", 10)
+            pdf.multi_cell(0, 10, f"Sector: {sector}")
+            pdf.multi_cell(0, 10, f"Website: {website}")
+            pdf.multi_cell(0, 10, f"Summary: {long_business_summary}")
 
             # Analyst price targets
             pdf.set_font("Arial", "B", 12)
