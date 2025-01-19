@@ -164,6 +164,7 @@ import os
 import smtplib
 from email.message import EmailMessage
 
+import matplotlib.pyplot as plt
 import pandas as pd  # To handle DataFrame type
 import yfinance as yf
 from fpdf import FPDF
@@ -200,6 +201,7 @@ def generate_financial_report(
 
     # Fetching data from Yahoo Finance
     result = yf.Ticker(ticker)
+    historical_data = result.history(period="10y")
     analyst_price_targets = result.analyst_price_targets
     recommendations_summary = result.recommendations_summary
     info = result.info
@@ -220,6 +222,95 @@ def generate_financial_report(
         else:
             return str(data)
 
+    # Function to calculate RSI
+    def calculate_rsi(data, window=14):
+        delta = data.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+        rs = gain / loss
+        return 100 - (100 / (1 + rs))
+
+    # Function to plot the stock chart
+    def plot_stock_chart(data, ticker, filename, analyst_price_targets):
+        plt.figure(figsize=(10, 8))
+
+        # Subplot 1: Stock price with moving averages
+        plt.subplot(2, 1, 1)
+        plt.plot(data.index, data["Close"], label="Close Price", color="blue")
+        plt.plot(data.index, data["SMA20"], label="SMA20", color="orange")
+        plt.plot(data.index, data["SMA50"], label="SMA50", color="green")
+        plt.plot(data.index, data["SMA100"], label="SMA100", color="red")
+
+        # Add analyst price targets as stars
+        if analyst_price_targets:
+            last_date = data.index[-1]
+            next_date = last_date + pd.Timedelta(
+                days=1
+            )  # Assume the next timestamp is the next day
+            plt.scatter(
+                next_date,
+                analyst_price_targets["current"],
+                color="gold",
+                label="Current Price Target",
+                s=200,
+                marker="*",
+            )
+            plt.scatter(
+                next_date,
+                analyst_price_targets["low"],
+                color="red",
+                label="Low Price Target",
+                s=200,
+                marker="*",
+            )
+            plt.scatter(
+                next_date,
+                analyst_price_targets["high"],
+                color="green",
+                label="High Price Target",
+                s=200,
+                marker="*",
+            )
+            plt.scatter(
+                next_date,
+                analyst_price_targets["mean"],
+                color="blue",
+                label="Mean Price Target",
+                s=200,
+                marker="*",
+            )
+            plt.scatter(
+                next_date,
+                analyst_price_targets["median"],
+                color="purple",
+                label="Median Price Target",
+                s=200,
+                marker="*",
+            )
+
+        plt.title(f"{ticker} Stock Price and Moving Averages")
+        plt.legend()
+        plt.grid()
+
+        # Subplot 2: RSI
+        plt.subplot(2, 1, 2)
+        plt.plot(data.index, data["RSI"], label="RSI", color="purple")
+        plt.axhline(70, color="red", linestyle="--", linewidth=1)
+        plt.axhline(30, color="green", linestyle="--", linewidth=1)
+        plt.title("Relative Strength Index (RSI)")
+        plt.legend()
+        plt.grid()
+
+        plt.tight_layout()
+        plt.savefig(filename, format="png")  # Save the chart as a PNG file
+        plt.close()
+
+    # Add moving averages and RSI to the historical data
+    historical_data["SMA20"] = historical_data["Close"].rolling(window=20).mean()
+    historical_data["SMA50"] = historical_data["Close"].rolling(window=50).mean()
+    historical_data["SMA100"] = historical_data["Close"].rolling(window=100).mean()
+    historical_data["RSI"] = calculate_rsi(historical_data["Close"])
+
     response = {}
 
     try:
@@ -239,18 +330,17 @@ def generate_financial_report(
             pdf.multi_cell(0, 10, f"Website: {website}")
             pdf.multi_cell(0, 10, f"Summary: {long_business_summary}")
 
-            # Analyst price targets
-            pdf.set_font("Arial", "B", 12)
-            pdf.cell(200, 10, "Analyst Price Targets", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.multi_cell(0, 10, format_data(analyst_price_targets))
+            # Plot stock chart and save it as a PNG
+            chart_filename = f"{ticker}_stock_chart.png"
+            plot_stock_chart(
+                historical_data, ticker, chart_filename, analyst_price_targets
+            )
 
-            # Recommendations summary
-            pdf.ln(10)
+            # Add the stock chart to the PDF
+            pdf.add_page()
             pdf.set_font("Arial", "B", 12)
-            pdf.cell(200, 10, "Recommendations Summary", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.multi_cell(0, 10, format_data(recommendations_summary))
+            pdf.cell(200, 10, "Stock Chart", ln=True)
+            pdf.image(chart_filename, x=10, y=30, w=180)  # Add the PNG image
 
             # Save PDF
             pdf_filename = f"{ticker}_report.pdf"
