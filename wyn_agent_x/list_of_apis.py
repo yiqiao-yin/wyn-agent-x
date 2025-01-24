@@ -416,3 +416,120 @@ def generate_financial_report(
     )
 
     return response
+
+
+from docx import Document
+
+
+@register_function("generate_word_document")
+def generate_word_document(
+    payload: Dict[str, str], secrets: Dict[str, str], event_stream: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Generate a Word document with a given header and paragraph and optionally send it via email.
+
+    Args:
+        payload (Dict[str, str]): Contains the header, paragraph, and email-related flags:
+                                  - header: The title for the Word document.
+                                  - paragraph: The content of the document.
+                                  - save_pdf: Whether to save the Word document as a .docx file (True/False).
+                                  - send_email: Whether to send the document via email (True/False).
+                                  - to_email: Recipient email address.
+        secrets (Dict[str, str]): Contains the email credentials (e.g., email_key).
+        event_stream (list): A list to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the status and the filename if saved.
+    """
+    # Extract payload values
+    header = payload.get("header", "Default Title")
+    paragraph = payload.get("paragraph", "Default paragraph content.")
+    save_docx = payload.get("save_docx", True)
+    send_email = payload.get("send_email", True)
+    to_email = payload.get("to_email", "eagle0504@gmail.com")
+
+    # Extract secrets
+    email_key = secrets.get("email_key")
+
+    # Log the API call details
+    print(f"Generating Word document with header: {header}, save_docx: {save_docx}")
+
+    response = {}
+
+    try:
+        if save_docx:
+            # Create a Word document
+            document = Document()
+            document.add_heading(header, level=1)
+            document.add_paragraph(paragraph)
+
+            # Save the document
+            file_name = "generated_document.docx"
+            document.save(file_name)
+            print(f"Word document saved as {file_name}.")
+            response = {"status": "success", "file": file_name}
+
+            if send_email:
+                # Check if the file exists
+                if not os.path.exists(file_name):
+                    raise FileNotFoundError(
+                        f"File '{file_name}' not found in the local directory"
+                    )
+
+                # Email credentials (use environment variables or replace directly)
+                from_email = "eagle0504@gmail.com"  # Your email address
+                password = email_key  # Your email password (use app-specific password for security)
+
+                # Create email message
+                msg = EmailMessage()
+                msg["Subject"] = "Generated Word Document"
+                msg["From"] = from_email
+                msg["To"] = to_email
+                msg.set_content("Please find the attached Word document.")
+
+                # Attach the Word document
+                with open(file_name, "rb") as f:
+                    file_data = f.read()
+                    msg.add_attachment(
+                        file_data,
+                        maintype="application",
+                        subtype="vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        filename=file_name,
+                    )
+
+                # Send the email
+                try:
+                    with smtplib.SMTP_SSL(
+                        "smtp.gmail.com", 465
+                    ) as server:  # SMTP server for Gmail
+                        server.login(from_email, password)
+                        server.send_message(msg)
+                    print(
+                        f"Email sent successfully to {to_email} with the attached document: {file_name}"
+                    )
+                except Exception as e:
+                    print(f"Failed to send email: {str(e)}")
+
+        else:
+            response = {
+                "status": "skipped",
+                "message": "Saving the Word document is disabled.",
+            }
+
+    except Exception as e:
+        response = {
+            "status": f"error: {str(e)}",
+            "message": "Failed to generate Word document.",
+        }
+        print(f"Error: {str(e)}")
+
+    # Append result to event stream
+    event_stream.append(
+        {
+            "event": "api_call",
+            "api_name": "generate_word_document",
+            "response": response,
+        }
+    )
+
+    return response

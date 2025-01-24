@@ -89,5 +89,37 @@
             "to_email": "string"
         },
         "prerequisite": null
+    },
+    "generate_word_document": {
+        "trigger_word": [
+            "create a document",
+            "generate a report",
+            "make a word file",
+            "write a letter",
+            "build a document",
+            "prepare a report",
+            "write a document",
+            "generate a letter",
+            "make a report",
+            "write a report",
+            "build a report",
+            "prepare a letter",
+            "generate a document",
+            "make a letter",
+            "write a file",
+            "build a letter",
+            "prepare a file",
+            "generate a file",
+            "make a file",
+            "write a document"
+        ],
+        "sample_payload": {
+            "header": "string",
+            "paragraph": "string",
+            "save_docx": "bool",
+            "send_email": "bool",
+            "to_email": "string"
+        },
+        "prerequisite": null
     }
 }
