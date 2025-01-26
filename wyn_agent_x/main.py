@@ -37,7 +37,7 @@ class AgentX:
         # Friendly welcome message with emoji
         print("👋 Welcome! Press 'EXIT' to quit the chat at any time.")
 
-        prompt = input("User: ")
+        prompt = input("👤 User: ")
 
         while "EXIT" not in prompt:
             # Add user message to event_stream
