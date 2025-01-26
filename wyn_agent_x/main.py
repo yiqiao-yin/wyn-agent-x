@@ -17,19 +17,21 @@ metadata = load_metadata(metadata_filepath)
 class AgentX:
     def __init__(
         self,
-        api_key: str,
+        openai_api_key: str,
         account_sid: str,
         auth_token: str,
         serpapi_key: str,
         email_key: str,
+        claude_api_key: str,
         protocol: str = "You are a helpful agent.",
     ):
         self.event_stream = []
-        self.bot = ChatBot(protocol=protocol, api_key=api_key)
+        self.bot = ChatBot(protocol=protocol, api_key=openai_api_key)
         self.account_sid = account_sid
         self.auth_token = auth_token
         self.serpapi_key = serpapi_key
         self.email_key = email_key
+        self.claude_api_key = claude_api_key
 
     def start_chat(self):
         # Friendly welcome message with emoji
@@ -50,6 +52,7 @@ class AgentX:
                 "auth_token": self.auth_token,
                 "serpapi_key": self.serpapi_key,
                 "email_key": self.email_key,
+                "claude_api_key": self.claude_api_key,
             }
 
             # Check if we need to resolve and execute any API calls

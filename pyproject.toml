@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wyn-agent-x"
-version = "0.4.7"
+version = "0.4.9"
 description = "This package is an updated WYN-Agent package."
 authors = ["Yiqiao Yin <eagle0504@gmail.com>"]
 readme = "README.md"
@@ -16,6 +16,8 @@ fpdf = "1.7.2"
 matplotlib = "^3.9.0"
 web-browser = "0.0.1"
 python-docx = "1.1.2"
+PyAutoGUI = "0.9.54"
+anthropic = "0.45.0"
 
 [build-system]
 requires = ["poetry-core"]

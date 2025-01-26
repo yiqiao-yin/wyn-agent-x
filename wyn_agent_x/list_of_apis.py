@@ -533,3 +533,117 @@ def generate_word_document(
     )
 
     return response
+
+
+import base64
+import os
+
+import anthropic
+import pyautogui
+
+
+@register_function("read_screen")
+def read_screen(
+    payload: Dict[str, Any], secrets: Dict[str, str], event_stream: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Takes a screenshot if requested, then optionally calls the Claude API with the screenshot
+    (converted to Base64) for an image caption. Returns the results in a dictionary.
+
+    Args:
+        payload (Dict[str, Any]): A dictionary containing:
+            - read_screen (bool): If True, take a screenshot using pyautogui.
+            - call_claude_api (bool): If True, send the screenshot to the Claude API for a caption.
+        secrets (Dict[str, str]): A dictionary containing:
+            - CLAUDE_API_KEY: The API key for Claude (retrieved from secrets).
+        event_stream (List[Dict[str, Any]]): A list to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the operation status and any captured data, for example:
+            {
+                "screenshot_taken": True/False,
+                "img_caption": "String describing the screenshot" or "N/A"
+            }
+    """
+
+    # Extract payload flags
+    read_screen_flag: bool = payload.get("read_screen", False)
+    call_claude_api_flag: bool = payload.get("call_claude_api", False)
+
+    # Retrieve Claude API key from secrets
+    claude_api_key: str = secrets.get("claude_api_key", "")
+
+    response: Dict[str, Any] = {}
+
+    # Take screenshot if requested
+    if read_screen_flag:
+        screenshot_file: str = "my_screenshot.png"
+        # Capture screenshot
+        im1 = pyautogui.screenshot()
+        im1.save(screenshot_file)
+        print(f"Screenshot saved as {screenshot_file}.")
+        response["screenshot_taken"] = True
+    else:
+        screenshot_file: str = ""
+        response["screenshot_taken"] = False
+
+    # Call Claude API if requested and we have an API key
+    if call_claude_api_flag and claude_api_key:
+        try:
+            # Encode screenshot to Base64 only if we took one
+            if response["screenshot_taken"]:
+                with open(screenshot_file, "rb") as f:
+                    file_obj: str = base64.standard_b64encode(f.read()).decode("utf-8")
+            else:
+                # If no screenshot was taken, you can choose to handle differently (e.g., skip).
+                file_obj: str = ""
+
+            # Initialize the Claude client
+            client = anthropic.Anthropic(api_key=claude_api_key)
+
+            # Make a request to Claude, embedding the screenshot as Base64 data
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=1024,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",
+                                    "data": file_obj,
+                                },
+                            },
+                            {"type": "text", "text": "Describe this image."},
+                        ],
+                    }
+                ],
+            )
+
+            # Extract the image caption from Claude's response
+            img_caption: str = message.content[0].text
+            response["img_caption"] = img_caption
+            print(f"Claude API caption: {img_caption}")
+
+        except Exception as e:
+            error_msg = f"Error calling Claude API: {str(e)}"
+            response["img_caption"] = error_msg
+            print(error_msg)
+    else:
+        response["img_caption"] = "N/A"
+        if call_claude_api_flag and not claude_api_key:
+            print("Claude API call requested, but no API key was provided.")
+
+    # Log the operation to the event stream
+    event_stream.append(
+        {
+            "event": "api_call",
+            "api_name": "read_screen",
+            "response": response,
+        }
+    )
+
+    return response

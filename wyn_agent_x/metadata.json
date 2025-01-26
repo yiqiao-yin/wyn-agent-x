@@ -121,5 +121,34 @@
             "to_email": "string"
         },
         "prerequisite": null
+    },
+    "read_screen": {
+        "trigger_word": [
+            "take a screenshot",
+            "capture a screenshot",
+            "read the screen",
+            "screenshot my screen",
+            "screen capture",
+            "snap a screenshot",
+            "grab a screenshot",
+            "scan the screen",
+            "capture the monitor",
+            "take a photo of my screen",
+            "photograph my screen",
+            "grab a shot of the screen",
+            "snap a picture of my screen",
+            "capture the screen content",
+            "clip the screen",
+            "produce a screen snapshot",
+            "screenshot now",
+            "screenshot capture",
+            "save the screen image",
+            "record the screen"
+        ],
+        "sample_payload": {
+            "read_screen": "bool",
+            "call_claude_api": "bool"
+        },
+        "prerequisite": null
     }
 }
