@@ -150,5 +150,62 @@
             "call_claude_api": "bool"
         },
         "prerequisite": null
+    },
+    "find_and_click": {
+        "trigger_word": [
+            "click on a link",
+            "click on a button",
+            "click on something",
+            "i want to click on a button",
+            "i want to click on something",
+            "initiate a click action",
+            "perform a click",
+            "mouse click on the screen",
+            "tap on this text",
+            "open the link",
+            "tap on a button",
+            "select the button",
+            "press the link",
+            "activate a clickable area",
+            "click here for me",
+            "locate and click it",
+            "simulate a mouse click",
+            "press the button now",
+            "execute a click event",
+            "click on the highlighted text"
+        ],
+        "sample_payload": {
+            "target_location": "string"
+        },
+        "prerequisite": null
+    },
+    "open_google_browser": {
+        "trigger_word": [
+            "open a new browser",
+            "launch a fresh browser window",
+            "start a new browser session",
+            "open google website",
+            "open google homepage",
+            "access google in a browser",
+            "launch browser for google",
+            "new browser window for google",
+            "fire up a google page",
+            "load google in my browser",
+            "go to google in a new window",
+            "initiate a browser and open google",
+            "run a new browser instance",
+            "pop up a new browser window",
+            "bring up google.com",
+            "open google in a separate window",
+            "open google in the default browser",
+            "start google in a fresh tab",
+            "open google with a click",
+            "launch a new tab for google"
+        ],
+        "sample_payload": {
+            "target_url_to_open": "string",
+            "verify_open_browser": "boolean"
+        },
+        "prerequisite": null
     }
 }

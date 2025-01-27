@@ -647,3 +647,395 @@ def read_screen(
     )
 
     return response
+
+
+import pyautogui
+import requests
+import json
+import base64
+from typing import Dict, Any, List
+
+@register_function("find_and_click")
+def find_and_click(
+    payload: Dict[str, Any],
+    secrets: Dict[str, str],
+    event_stream: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Orchestrates a full workflow to:
+      1) Capture a screenshot of the entire screen,
+      2) Convert it to Base64,
+      3) POST it to an AWS Textract-like endpoint to get OCR data,
+      4) Clean the OCR data,
+      5) Find the OCR entry whose text best matches the 'target_location' string from the payload,
+      6) Convert that entry's bounding box (in percentage) to an absolute screen region,
+      7) Screenshot that region and save it,
+      8) Locate that smaller screenshot on the full screen,
+      9) Move the mouse there and click.
+
+    Args:
+        payload (Dict[str, Any]): A dictionary expected to contain:
+            - target_location (str): The text we want to find in the OCR results.
+        secrets (Dict[str, str]): A dictionary of secrets (not used in this function, included for parity).
+        event_stream (List[Dict[str, Any]]): A list to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing:
+            {
+                "screenshot_taken": bool,
+                "screenshot_saved": bool,
+                "screenshot_file": str,
+                "image_found_on_screen": bool,
+                "click_performed": bool,
+                "error": str (optional),
+            }
+    """
+
+    # Initialize a response dictionary
+    response: Dict[str, Any] = {
+        "screenshot_taken": False,
+        "screenshot_saved": False,
+        "screenshot_file": "",
+        "image_found_on_screen": False,
+        "click_performed": False
+    }
+
+    # Extract the single required value from payload
+    target_location: str = payload.get("target_location", "")
+
+    # Validate minimal input
+    if not target_location:
+        error_msg = (
+            "Missing required payload parameter. 'target_location' must be provided."
+        )
+        print(error_msg)
+        response["error"] = error_msg
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "find_and_click",
+                "response": response,
+            }
+        )
+        return response
+
+    # Helper functions defined locally:
+
+    def image_to_base64(file_path: str) -> str:
+        """
+        Reads an image file from the given file path and returns its content encoded in base64.
+
+        Args:
+            file_path (str): The path to the image file (e.g., png, jpg).
+
+        Returns:
+            str: The base64 encoded content of the image file, or an empty string if an error occurs.
+        """
+        try:
+            with open(file_path, "rb") as image_file:
+                image_content = image_file.read()
+            base64_encoded_image = base64.b64encode(image_content)
+            return base64_encoded_image.decode("utf-8")
+        except Exception as e:
+            print(f"Error in image_to_base64: {str(e)}")
+            return ""
+
+    def post_request_and_parse_response(url: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sends a POST request to the specified URL with the given data,
+        then parses the byte response to a dictionary.
+
+        Args:
+            url (str): The URL to which the POST request is sent.
+            data (Dict[str, Any]): The data to send in the POST request.
+
+        Returns:
+            Dict[str, Any]: The parsed dictionary from the response or an empty dict on error.
+        """
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(url, json=data, headers=headers)
+            byte_data = response.content
+            decoded_string = byte_data.decode("utf-8")
+            dict_data = json.loads(decoded_string)
+            return dict_data
+        except Exception as ex:
+            print(f"Error in post_request_and_parse_response: {str(ex)}")
+            return {}
+
+    def clean_ocr_results(ocr_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Cleans the OCR results obtained from AWS Textract by extracting the text
+        and bounding box for each line that contains a 'Text' field.
+
+        Args:
+            ocr_data (List[Dict[str, Any]]): A list of OCR result dictionaries as parsed from JSON.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries, each containing 'text' and 'bbox'
+                                  (bounding box) for valid OCR entries.
+        """
+        cleaned_list = []
+        for item in ocr_data:
+            if "Text" in item:
+                bbox = item.get("Geometry", {}).get("BoundingBox", {})
+                cleaned_entry = {
+                    "text": item["Text"],
+                    "bbox": bbox
+                }
+                cleaned_list.append(cleaned_entry)
+        return cleaned_list
+
+    def find_closest_match(ocr_results: List[Dict[str, Any]], prompt: str) -> Dict[str, Any]:
+        """
+        Finds the OCR result whose 'text' is the closest match to a given prompt,
+        using the Levenshtein distance metric.
+
+        Args:
+            ocr_results (List[Dict[str, Any]]): A list of dictionaries, each containing at least:
+                {
+                  "text": <string>,
+                  "bbox": {
+                    "Width": <float>,
+                    "Height": <float>,
+                    "Left": <float>,
+                    "Top": <float>
+                  }
+                }
+            prompt (str): The string to match against the OCR text.
+
+        Returns:
+            Dict[str, Any]: The dictionary from 'ocr_results' whose 'text' field has
+                            the smallest Levenshtein distance to the prompt,
+                            or an empty dict if no results exist.
+        """
+        def levenshtein_distance(str1: str, str2: str) -> int:
+            if not str1:
+                return len(str2)
+            if not str2:
+                return len(str1)
+
+            dp = [[0] * (len(str2) + 1) for _ in range(len(str1) + 1)]
+            for i in range(len(str1) + 1):
+                dp[i][0] = i
+            for j in range(len(str2) + 1):
+                dp[0][j] = j
+
+            for i in range(1, len(str1) + 1):
+                for j in range(1, len(str2) + 1):
+                    if str1[i - 1] == str2[j - 1]:
+                        dp[i][j] = dp[i - 1][j - 1]
+                    else:
+                        dp[i][j] = 1 + min(
+                            dp[i - 1][j],    # Deletion
+                            dp[i][j - 1],    # Insertion
+                            dp[i - 1][j - 1] # Substitution
+                        )
+            return dp[len(str1)][len(str2)]
+
+        min_distance = float("inf")
+        best_match = {}
+        for item in ocr_results:
+            candidate_text = item.get("text", "")
+            distance = levenshtein_distance(candidate_text.lower(), prompt.lower())
+            if distance < min_distance:
+                min_distance = distance
+                best_match = item
+        return best_match
+
+    try:
+        # 1) Capture a screenshot of the entire screen
+        screen_width, screen_height = pyautogui.size()
+
+        # Calculate 75% of the screen width
+        width_75pct = int(screen_width * 0.75)
+
+        # The region is defined as (left, top, width, height).
+        region = (0, 0, width_75pct, screen_height)
+
+        # Capture a screenshot of the specified region
+        partial_screenshot = pyautogui.screenshot(region=region)
+        screenshot_file: str = "whole_screenshot.png"
+        im1 = partial_screenshot
+        im1.save(screenshot_file)
+        print(f"Screenshot of whole screen saved as {screenshot_file}.")
+        response["screenshot_taken"] = True
+
+        # 2) Convert this screenshot to Base64
+        image_base64: str = image_to_base64(screenshot_file)
+        if not image_base64:
+            error_msg = "Could not convert the screenshot to Base64. Aborting."
+            print(error_msg)
+            response["error"] = error_msg
+            event_stream.append(
+                {
+                    "event": "api_call",
+                    "api_name": "find_and_click",
+                    "response": response,
+                }
+            )
+            return response
+
+        # 3) POST this base64 image to the Textract-like endpoint
+        url = "https://2tsig211e0.execute-api.us-east-1.amazonaws.com/my_textract"
+        post_data = {"image": image_base64}
+        result_dict = post_request_and_parse_response(url, post_data)
+        print("OCR response received. Here are the keys:")
+        print(result_dict.keys())
+
+        # 4) Check if 'body' is in the response dictionary
+        if "body" not in result_dict:
+            error_msg = "No 'body' found in the OCR response. Aborting."
+            print(error_msg)
+            response["error"] = error_msg
+            event_stream.append(
+                {
+                    "event": "api_call",
+                    "api_name": "find_and_click",
+                    "response": response,
+                }
+            )
+            return response
+
+        # 5) Parse the 'body' field, which should be a JSON string
+        ocr_data: List[Dict[str, Any]] = json.loads(result_dict["body"])
+
+        # 6) Clean up the raw OCR results
+        cleaned_up_results: List[Dict[str, Any]] = clean_ocr_results(ocr_data)
+
+        # 7) Find the best match for the text (using 'target_location' as prompt)
+        best_matched_result: Dict[str, Any] = find_closest_match(cleaned_up_results, target_location)
+        if not best_matched_result:
+            error_msg = "No suitable OCR match found. Aborting."
+            print(error_msg)
+            response["error"] = error_msg
+            event_stream.append(
+                {
+                    "event": "api_call",
+                    "api_name": "find_and_click",
+                    "response": response,
+                }
+            )
+            return response
+
+        # 8) Extract bounding box percentages from the best match
+        bbox: Dict[str, float] = best_matched_result.get("bbox", {})
+        width_pct: float = bbox.get("Width", 0.0)
+        height_pct: float = bbox.get("Height", 0.0)
+        left_pct: float = bbox.get("Left", 0.0)
+        top_pct: float = bbox.get("Top", 0.0)
+
+        # 9) Convert percentages to absolute screen coordinates
+        screen_width, screen_height = pyautogui.size()
+        abs_left = int(left_pct * screen_width * 0.75)  # 75% of the screen width
+        abs_top = int(top_pct * screen_height)
+        abs_width = int(width_pct * screen_width * 0.75)  # 75% of the screen width
+        abs_height = int(height_pct * screen_height)
+
+        region = (abs_left, abs_top, abs_width, abs_height)
+
+        # 10) Take a screenshot of the specified region
+        screenshot_path = "screenshot_region.png"
+        screenshot = pyautogui.screenshot(region=region)
+        screenshot.save(screenshot_path)
+        print(f"Screenshot of the specified region saved as '{screenshot_path}'.")
+        response["screenshot_saved"] = True
+        response["screenshot_file"] = screenshot_path
+
+        # 11) Locate the center of the saved screenshot on the screen
+        center = pyautogui.locateCenterOnScreen(screenshot_path)
+        if center:
+            x, y = center
+            print(f"Screenshot image found at coordinates: ({x}, {y}).")
+            response["image_found_on_screen"] = True
+
+            # Move mouse to the found location (3-second duration)
+            pyautogui.moveTo(x, y, duration=3)
+            print("Mouse moved to the center of the screenshot image over 3 seconds.")
+
+            # Click on the found center
+            pyautogui.click()
+            print("Clicked on the screenshot image.")
+            response["click_performed"] = True
+        else:
+            print(f"Screenshot image ('{screenshot_path}') not found on the screen.")
+
+    except Exception as e:
+        error_msg = f"Error in find_and_click: {str(e)}"
+        print(error_msg)
+        response["error"] = error_msg
+
+    # Log the operation to the event_stream
+    event_stream.append(
+        {
+            "event": "api_call",
+            "api_name": "find_and_click",
+            "response": {"text": response, "status": "200 success"},
+        }
+    )
+
+    return response
+
+
+@register_function("open_google_browser")
+def open_google_browser(
+    payload: Dict[str, Any],
+    secrets: Dict[str, str],
+    event_stream: list
+) -> Dict[str, Any]:
+    """
+    Opens the specified URL in the default web browser if the user confirms.
+
+    Args:
+        payload (Dict[str, Any]): A dictionary containing the user parameters:
+                                  - verify_open_browser (bool): Whether to open the browser or not.
+                                  - target_url_to_open (str): The URL to be opened in the browser.
+        secrets (Dict[str, str]): Not used for this function, but present to maintain interface consistency.
+        event_stream (list): A list used to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary with the status of the operation and a message.
+    """
+    import webbrowser
+
+    def open_url(url: str) -> None:
+        """
+        Opens the specified URL in the user's default web browser.
+
+        Args:
+            url (str): The URL to open.
+        """
+        # The webbrowser.open() function attempts to open the provided URL
+        # in the default browser on the user's system
+        webbrowser.open(url)
+
+    # Extract the required payload parameters
+    target_url_to_open = payload.get("target_url_to_open", "https://www.google.com")
+    verify_open_browser = payload.get("verify_open_browser", False)
+
+    if verify_open_browser:
+        # Open the user-specified URL
+        open_url(target_url_to_open)
+        response = {
+            "status": "success",
+            "model_name": "None",
+            "message": f"Browser opened to {target_url_to_open}.",
+        }
+    else:
+        # No action taken
+        response = {
+            "status": "no_action",
+            "model_name": "None",
+            "message": "User declined to open the browser.",
+        }
+
+    # Log the event and response
+    event_stream.append(
+        {
+            "event": "api_call",
+            "api_name": "open_google_browser",
+            "response": {"text": response, "status": "200 success"},
+        }
+    )
+
+    return response
