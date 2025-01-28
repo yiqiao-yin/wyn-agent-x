@@ -207,5 +207,115 @@
             "verify_open_browser": "boolean"
         },
         "prerequisite": null
+    },
+    "enter_text_on_screen": {
+        "trigger_word": [
+            "i want to write on screen",
+            "write on screen",
+            "type in",
+            "i want to type something in",
+            "input text on screen",
+            "enter text now",
+            "please type this",
+            "start typing on screen",
+            "write a message on screen",
+            "type out on screen",
+            "insert text via keyboard",
+            "key in text",
+            "i need to type",
+            "put text on the screen",
+            "i want to input text",
+            "send keystrokes",
+            "populate fields with text",
+            "simulate typing",
+            "type characters on screen",
+            "place text here"
+        ],
+        "sample_payload": {
+            "text_to_write": "string"
+        },
+        "prerequisite": null
+    },
+    "scroll_up": {
+        "trigger_word": [
+        "scroll up",
+        "move page up",
+        "go up on the page",
+        "shift display upwards",
+        "roll up content",
+        "lift the view",
+        "i need to scroll up",
+        "scroll upward",
+        "move upward",
+        "push content up",
+        "please scroll up",
+        "scroll up the screen",
+        "scrolling up now",
+        "go to the top",
+        "scroll up a few lines",
+        "need to see higher content",
+        "shift window up",
+        "show previous content",
+        "drag content up",
+        "navigate up"
+        ],
+        "sample_payload": {
+            "number_of_lines_to_scroll": "int"
+        },
+        "prerequisite": null
+    },
+    "scroll_down": {
+        "trigger_word": [
+            "scroll down",
+            "move page down",
+            "go down on the page",
+            "shift display downwards",
+            "roll down content",
+            "lower the view",
+            "i need to scroll down",
+            "scroll downward",
+            "move downward",
+            "pull content down",
+            "please scroll down",
+            "scroll down the screen",
+            "scrolling down now",
+            "go to the bottom",
+            "scroll down a few lines",
+            "need to see lower content",
+            "shift window down",
+            "show next content",
+            "drag content down",
+            "navigate down"
+        ],
+        "sample_payload": {
+            "number_of_lines_to_scroll": "int"
+        },
+        "prerequisite": null
+    },
+    "click_now": {
+        "trigger_word": [
+            "click now",
+            "press click",
+            "perform a click",
+            "left click",
+            "mouse click please",
+            "initiate click action",
+            "trigger a click",
+            "click the mouse",
+            "tap the mouse button",
+            "click on the screen",
+            "i need a click",
+            "single click please",
+            "perform mouse click",
+            "click something now",
+            "execute a click",
+            "apply a click",
+            "one click action",
+            "short click now",
+            "please click",
+            "do a single click"
+        ],
+        "sample_payload": {},
+        "prerequisite": null
     }
 }

@@ -1039,3 +1039,234 @@ def open_google_browser(
     )
 
     return response
+
+
+from typing import Dict, Any, List
+import pyautogui
+
+@register_function("enter_text_on_screen")
+def enter_text_on_screen(
+    payload: Dict[str, str],
+    secrets: Dict[str, str],
+    event_stream: List[Any]
+) -> Dict[str, Any]:
+    """
+    Simulate typing text on the screen using the PyAutoGUI library.
+
+    Args:
+        payload (Dict[str, str]): A dictionary containing:
+                                  - text_to_write: The text to write on the screen.
+        secrets (Dict[str, str]): Reserved for any secret values or API keys (not used here).
+        event_stream (List[Any]): A list used to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary with the status of the call and any relevant response data.
+    """
+    text_to_write = payload.get("text_to_write", "")
+
+    try:
+        # Click on the current location to ensure the text is entered in the right place
+        pyautogui.click()
+
+        # Use PyAutoGUI to write the specified text
+        pyautogui.write(text_to_write)
+
+        # Prepare the success response
+        response = {
+            "status": "success",
+            "model_name": "None",
+            "message": f"Typed text: {text_to_write}"
+        }
+
+        # Log event in the event stream
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "enter_text_on_screen",
+                "response": {"text": response, "status": "200 success"},
+            }
+        )
+    except Exception as e:
+        # Handle exceptions gracefully
+        response = {"status": f"error: {str(e)}", "model_name": "None"}
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "enter_text_on_screen",
+                "response": response
+            }
+        )
+
+    return response
+
+
+from typing import Dict, Any, List
+import pyautogui
+
+@register_function("scroll_up")
+def scroll_up(
+    payload: Dict[str, str],
+    secrets: Dict[str, str],
+    event_stream: List[Any]
+) -> Dict[str, Any]:
+    """
+    Scroll up by a specified number of lines using PyAutoGUI.
+
+    Args:
+        payload (Dict[str, str]): A dictionary containing:
+                                  - number_of_lines_to_scroll: (optional) The number of lines to scroll up.
+        secrets (Dict[str, str]): Reserved for any secret values or API keys (not used here).
+        event_stream (List[Any]): A list used to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary with the status of the call and any relevant response data.
+    """
+    # Extract number_of_lines_to_scroll from the payload, default to 7 if not provided or invalid
+    raw_scroll_value = payload.get("number_of_lines_to_scroll", 7)
+    try:
+        number_of_lines_to_scroll = int(raw_scroll_value)
+    except (ValueError, TypeError):
+        number_of_lines_to_scroll = 7
+
+    try:
+        # Perform the scroll action using PyAutoGUI
+        pyautogui.scroll(number_of_lines_to_scroll)
+
+        # Prepare the success response
+        response = {
+            "status": "success",
+            "model_name": "None",
+            "message": f"Scrolled up {number_of_lines_to_scroll} lines."
+        }
+
+        # Log event in the event stream
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "scroll_up",
+                "response": {"text": response, "status": "200 success"},
+            }
+        )
+    except Exception as e:
+        # Handle exceptions gracefully
+        response = {"status": f"error: {str(e)}", "model_name": "None"}
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "scroll_up",
+                "response": response
+            }
+        )
+
+    return response
+
+
+@register_function("scroll_down")
+def scroll_down(
+    payload: Dict[str, str],
+    secrets: Dict[str, str],
+    event_stream: List[Any]
+) -> Dict[str, Any]:
+    """
+    Scroll down by a specified number of lines using PyAutoGUI.
+
+    Args:
+        payload (Dict[str, str]): A dictionary containing:
+                                  - number_of_lines_to_scroll: (optional) The number of lines to scroll down.
+        secrets (Dict[str, str]): Reserved for any secret values or API keys (not used here).
+        event_stream (List[Any]): A list used to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary with the status of the call and any relevant response data.
+    """
+    # Extract number_of_lines_to_scroll from the payload, default to 7 if not provided or invalid
+    raw_scroll_value = payload.get("number_of_lines_to_scroll", 7)
+    try:
+        number_of_lines_to_scroll = int(raw_scroll_value)
+    except (ValueError, TypeError):
+        number_of_lines_to_scroll = 7
+
+    try:
+        # Perform the scroll action (negative value for scrolling down)
+        pyautogui.scroll(-number_of_lines_to_scroll)
+
+        # Prepare the success response
+        response = {
+            "status": "success",
+            "model_name": "None",
+            "message": f"Scrolled down {number_of_lines_to_scroll} lines."
+        }
+
+        # Log event in the event stream
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "scroll_down",
+                "response": {"text": response, "status": "200 success"},
+            }
+        )
+    except Exception as e:
+        # Handle exceptions gracefully
+        response = {"status": f"error: {str(e)}", "model_name": "None"}
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "scroll_down",
+                "response": response
+            }
+        )
+
+    return response
+
+
+from typing import Dict, Any, List
+import pyautogui
+
+@register_function("click_now")
+def click_now(
+    payload: Dict[str, str],
+    secrets: Dict[str, str],
+    event_stream: List[Any]
+) -> Dict[str, Any]:
+    """
+    Perform a mouse click using the PyAutoGUI library.
+
+    Args:
+        payload (Dict[str, str]): Reserved for any arguments (not used in this function).
+        secrets (Dict[str, str]): Reserved for any secret values or API keys (not used here).
+        event_stream (List[Any]): A list used to log events and responses.
+
+    Returns:
+        Dict[str, Any]: A dictionary with the status of the call and any relevant response data.
+    """
+    try:
+        # Perform a mouse click
+        pyautogui.click()
+
+        # Prepare the success response
+        response = {
+            "status": "success",
+            "model_name": "None",
+            "message": "Mouse click performed."
+        }
+
+        # Log event in the event stream
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "click_now",
+                "response": {"text": response, "status": "200 success"},
+            }
+        )
+    except Exception as e:
+        # Handle exceptions gracefully
+        response = {"status": f"error: {str(e)}", "model_name": "None"}
+        event_stream.append(
+            {
+                "event": "api_call",
+                "api_name": "click_now",
+                "response": response
+            }
+        )
+
+    return response
