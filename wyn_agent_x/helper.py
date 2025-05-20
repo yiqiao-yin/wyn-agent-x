@@ -196,7 +196,8 @@ def find_in_event_stream(
     """
     Helper function to find a piece of information in the event stream.
     Searches in reverse order for the most recent occurrence of a matching key.
-    Stops when any 'success' status is encountered, meaning that information is already used.
+    Stops when a 'success' status is encountered for the current API call,
+    meaning that information is already used in a previous successful call.
 
     Args:
         key (str): The key to search for.
@@ -207,10 +208,12 @@ def find_in_event_stream(
         Optional[str]: The content of the user message matching the key, or None if not found.
     """
     for event in reversed(event_stream):
-        # Stop the search if an API call with a 'success' status is found for any API
-        if event.get("event") == "api_call" and "success" in event.get(
-            "response", {}
-        ).get("status", ""):
+        # Stop the search if a successful API call for this API is found
+        if (
+            event.get("event") == "api_call"
+            and event.get("api_name") == current_api_name
+            and "success" in event.get("response", {}).get("status", "")
+        ):
             break
 
         # Continue searching user messages
